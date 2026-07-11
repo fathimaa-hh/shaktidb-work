@@ -1,5 +1,6 @@
-import bcrypt
 from database.connection import get_connection
+import bcrypt
+from psycopg2.extras import RealDictCursor
 
 
 def register_user(name, email, password):
@@ -12,10 +13,11 @@ def register_user(name, email, password):
     if connection is None:
         return False, "Database connection failed."
 
-    cursor = connection.cursor()
+    cursor = connection.cursor(
+        cursor_factory=RealDictCursor
+    )
 
     try:
-
         # Check if email already exists
         cursor.execute(
             "SELECT user_id FROM users WHERE email = %s;",
@@ -47,16 +49,13 @@ def register_user(name, email, password):
         return True, "Registration successful."
 
     except Exception as error:
-
         connection.rollback()
-
         return False, str(error)
 
     finally:
-
         cursor.close()
-
         connection.close()
+
 
 def login_user(email, password):
     """
@@ -68,7 +67,9 @@ def login_user(email, password):
     if connection is None:
         return False, "Database connection failed."
 
-    cursor = connection.cursor()
+    cursor = connection.cursor(
+        cursor_factory=RealDictCursor
+    )
 
     try:
         cursor.execute(
@@ -85,17 +86,16 @@ def login_user(email, password):
         if user is None:
             return False, "Invalid email or password."
 
-        stored_password = user[3]
+        stored_password = user["password"]
 
         if bcrypt.checkpw(
             password.encode("utf-8"),
             stored_password.encode("utf-8")
         ):
-
             return True, {
-                "user_id": user[0],
-                "name": user[1],
-                "email": user[2]
+                "user_id": user["user_id"],
+                "name": user["name"],
+                "email": user["email"]
             }
 
         return False, "Invalid email or password."

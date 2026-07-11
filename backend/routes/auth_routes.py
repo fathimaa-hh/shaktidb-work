@@ -1,6 +1,7 @@
 from flask import Blueprint, request
 from services.auth_service import register_user, login_user
 from utils.response import success_response, error_response
+
 auth_bp = Blueprint("auth", __name__)
 
 
@@ -20,19 +21,19 @@ def register():
         return error_response("All fields are required.")
 
     success, message = register_user(
-    name,
-    email,
-    password
+        name,
+        email,
+        password
     )
 
     if success:
         return success_response(
-        message,
-        status_code=201
-    )
+            message,
+            status_code=201
+        )
 
     return error_response(message)
-    from utils.response import success_response, error_response
+
 
 @auth_bp.route("/login", methods=["POST"])
 def login():
