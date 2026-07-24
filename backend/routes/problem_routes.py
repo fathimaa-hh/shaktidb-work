@@ -1,7 +1,10 @@
 from flask import Blueprint, request
 from services.problem_service import (
     add_problem,
-    get_all_problems
+    get_all_problems,
+    get_problem_by_id,
+    update_problem,
+    delete_problem
 )
 from utils.response import success_response, error_response
 
@@ -61,3 +64,57 @@ def view_all_problems(user_id):
         )
 
     return error_response(result)
+@problem_bp.route("/problem/<int:history_id>", methods=["GET"])
+def view_problem(history_id):
+
+    success, result = get_problem_by_id(history_id)
+
+    if success:
+        return success_response(
+            "Problem retrieved successfully.",
+            result
+        )
+
+    return error_response(result, 404)
+
+@problem_bp.route("/problem/<int:history_id>", methods=["PUT"])
+def edit_problem(history_id):
+
+    data = request.get_json()
+
+    if not data:
+        return error_response("No JSON data received.")
+
+    required_fields = [
+        "attempts",
+        "time_taken",
+        "language",
+        "notes"
+    ]
+
+    for field in required_fields:
+        if field not in data:
+            return error_response(f"{field} is required.")
+
+    success, message = update_problem(
+        history_id,
+        data["attempts"],
+        data["time_taken"],
+        data["language"],
+        data["notes"]
+    )
+
+    if success:
+        return success_response(message)
+
+    return error_response(message, 404)
+
+@problem_bp.route("/problem/<int:history_id>", methods=["DELETE"])
+def remove_problem(history_id):
+
+    success, message = delete_problem(history_id)
+
+    if success:
+        return success_response(message)
+
+    return error_response(message, 404)
