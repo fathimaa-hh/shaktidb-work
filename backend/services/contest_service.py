@@ -147,3 +147,61 @@ def get_contest_by_id(contest_id):
 
         cursor.close()
         connection.close()
+
+def update_contest(
+    contest_id,
+    platform_id,
+    contest_name,
+    rank,
+    score,
+    contest_date
+):
+
+    connection = get_connection()
+
+    if connection is None:
+        return False, "Database connection failed."
+
+    cursor = connection.cursor(
+        cursor_factory=RealDictCursor
+    )
+
+    try:
+
+        cursor.execute(
+            """
+            UPDATE contests
+            SET
+                platform_id = %s,
+                contest_name = %s,
+                rank = %s,
+                score = %s,
+                contest_date = %s
+            WHERE contest_id = %s;
+            """,
+            (
+                platform_id,
+                contest_name,
+                rank,
+                score,
+                contest_date,
+                contest_id
+            )
+        )
+
+        if cursor.rowcount == 0:
+            return False, "Contest not found."
+
+        connection.commit()
+
+        return True, "Contest updated successfully."
+
+    except Exception as error:
+
+        connection.rollback()
+        return False, str(error)
+
+    finally:
+
+        cursor.close()
+        connection.close()

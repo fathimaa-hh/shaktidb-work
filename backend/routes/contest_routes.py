@@ -3,7 +3,8 @@ from flask import Blueprint, request
 from services.contest_service import (
     add_contest,
     get_all_contests,
-    get_contest_by_id
+    get_contest_by_id,
+    update_contest
 )
 from utils.response import success_response, error_response
 
@@ -70,3 +71,37 @@ def fetch_contest(contest_id):
         )
 
     return error_response(result, 404)
+
+@contest_bp.route("/contest/<int:contest_id>", methods=["PUT"])
+def edit_contest(contest_id):
+
+    data = request.get_json()
+
+    if not data:
+        return error_response("No JSON data received.")
+
+    required_fields = [
+        "platform_id",
+        "contest_name",
+        "rank",
+        "score",
+        "contest_date"
+    ]
+
+    for field in required_fields:
+        if field not in data:
+            return error_response(f"{field} is required.")
+
+    success, message = update_contest(
+        contest_id,
+        data["platform_id"],
+        data["contest_name"],
+        data["rank"],
+        data["score"],
+        data["contest_date"]
+    )
+
+    if success:
+        return success_response(message)
+
+    return error_response(message, 404)
