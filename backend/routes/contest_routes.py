@@ -4,8 +4,9 @@ from services.contest_service import (
     add_contest,
     get_all_contests,
     get_contest_by_id,
-    update_contest
-)
+    update_contest,
+    delete_contest
+)   
 from utils.response import success_response, error_response
 
 contest_bp = Blueprint("contest", __name__)
@@ -100,6 +101,16 @@ def edit_contest(contest_id):
         data["score"],
         data["contest_date"]
     )
+
+    if success:
+        return success_response(message)
+
+    return error_response(message, 404)
+
+@contest_bp.route("/contest/<int:contest_id>", methods=["DELETE"])
+def remove_contest(contest_id):
+
+    success, message = delete_contest(contest_id)
 
     if success:
         return success_response(message)

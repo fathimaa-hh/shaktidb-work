@@ -205,3 +205,42 @@ def update_contest(
 
         cursor.close()
         connection.close()
+
+
+def delete_contest(contest_id):
+
+    connection = get_connection()
+
+    if connection is None:
+        return False, "Database connection failed."
+
+    cursor = connection.cursor(
+        cursor_factory=RealDictCursor
+    )
+
+    try:
+
+        cursor.execute(
+            """
+            DELETE FROM contests
+            WHERE contest_id = %s;
+            """,
+            (contest_id,)
+        )
+
+        if cursor.rowcount == 0:
+            return False, "Contest not found."
+
+        connection.commit()
+
+        return True, "Contest deleted successfully."
+
+    except Exception as error:
+
+        connection.rollback()
+        return False, str(error)
+
+    finally:
+
+        cursor.close()
+        connection.close() 
