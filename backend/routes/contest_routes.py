@@ -2,7 +2,8 @@ from flask import Blueprint, request
 
 from services.contest_service import (
     add_contest,
-    get_all_contests
+    get_all_contests,
+    get_contest_by_id
 )
 from utils.response import success_response, error_response
 
@@ -56,3 +57,16 @@ def fetch_contests(user_id):
         )
 
     return error_response(result)
+
+@contest_bp.route("/contest/<int:contest_id>", methods=["GET"])
+def fetch_contest(contest_id):
+
+    success, result = get_contest_by_id(contest_id)
+
+    if success:
+        return success_response(
+            "Contest fetched successfully.",
+            result
+        )
+
+    return error_response(result, 404)

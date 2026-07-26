@@ -101,3 +101,49 @@ def get_all_contests(user_id):
 
         cursor.close()
         connection.close()
+
+def get_contest_by_id(contest_id):
+
+    connection = get_connection()
+
+    if connection is None:
+        return False, "Database connection failed."
+
+    cursor = connection.cursor(
+        cursor_factory=RealDictCursor
+    )
+
+    try:
+
+        cursor.execute(
+            """
+            SELECT
+                c.contest_id,
+                c.contest_name,
+                p.platform_name,
+                c.rank,
+                c.score,
+                c.contest_date
+            FROM contests c
+            JOIN platforms p
+            ON c.platform_id = p.platform_id
+            WHERE c.contest_id = %s;
+            """,
+            (contest_id,)
+        )
+
+        contest = cursor.fetchone()
+
+        if contest is None:
+            return False, "Contest not found."
+
+        return True, contest
+
+    except Exception as error:
+
+        return False, str(error)
+
+    finally:
+
+        cursor.close()
+        connection.close()
