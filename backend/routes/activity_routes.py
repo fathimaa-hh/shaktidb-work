@@ -3,7 +3,9 @@ from flask import Blueprint, request
 from services.activity_service import (
     add_activity,
     get_all_activities,
-    get_activity_by_id
+    get_activity_by_id,
+    update_activity,
+    delete_activity
 )
 from utils.response import success_response, error_response
 
@@ -66,3 +68,43 @@ def fetch_activity(activity_id):
         )
 
     return error_response(result, 404)
+
+@activity_bp.route("/activity/<int:activity_id>", methods=["PUT"])
+def edit_activity(activity_id):
+
+    data = request.get_json()
+
+    if not data:
+        return error_response("No JSON data received.")
+
+    required_fields = [
+        "practice_date",
+        "coding_minutes",
+        "problems_solved"
+    ]
+
+    for field in required_fields:
+        if field not in data:
+            return error_response(f"{field} is required.")
+
+    success, message = update_activity(
+        activity_id,
+        data["practice_date"],
+        data["coding_minutes"],
+        data["problems_solved"]
+    )
+
+    if success:
+        return success_response(message)
+
+    return error_response(message, 404)
+
+@activity_bp.route("/activity/<int:activity_id>", methods=["DELETE"])
+def remove_activity(activity_id):
+
+    success, message = delete_activity(activity_id)
+
+    if success:
+        return success_response(message)
+
+    return error_response(message, 404)
