@@ -230,3 +230,81 @@ body {
         padding: 20px 15px;
     }
 }
+/* Dashboard Charts */
+
+.charts-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 22px;
+    margin-top: 30px;
+}
+
+.chart-card {
+    background: white;
+    padding: 25px;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+    min-width: 0;
+}
+
+.chart-card h3 {
+    font-size: 16px;
+    margin-bottom: 22px;
+    color: #333;
+}
+
+.chart-container {
+    position: relative;
+    height: 280px;
+    width: 100%;
+}
+
+.monthly-chart-card {
+    grid-column: span 2;
+}
+
+.monthly-chart-card .chart-container {
+    height: 320px;
+}
+
+.loading-message,
+.error-message {
+    padding: 30px;
+    font-size: 16px;
+}
+
+.error-message {
+    color: #dc2626;
+}
+
+.empty-message {
+    color: #888;
+    text-align: center;
+    padding: 40px 10px;
+}
+
+/* Responsive Charts */
+
+@media (max-width: 900px) {
+    .charts-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .monthly-chart-card {
+        grid-column: span 1;
+    }
+}
+
+@media (max-width: 600px) {
+    .chart-card {
+        padding: 18px;
+    }
+
+    .chart-container {
+        height: 240px;
+    }
+
+    .monthly-chart-card .chart-container {
+        height: 280px;
+    }
+}

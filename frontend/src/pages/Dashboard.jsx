@@ -1,8 +1,20 @@
 import { useEffect, useState } from "react";
 import api from "../services/api";
 
+import {
+    PlatformChart,
+    DifficultyChart,
+    TopicChart,
+    MonthlyChart,
+} from "../components/Charts";
+
 function Dashboard() {
     const [dashboard, setDashboard] = useState(null);
+    const [platforms, setPlatforms] = useState([]);
+    const [difficulty, setDifficulty] = useState([]);
+    const [topics, setTopics] = useState([]);
+    const [monthly, setMonthly] = useState([]);
+
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
 
@@ -10,30 +22,42 @@ function Dashboard() {
     const userId = 1;
 
     useEffect(() => {
-        const fetchDashboard = async () => {
+        const fetchDashboardData = async () => {
             try {
                 setLoading(true);
+                setError("");
 
-                const response = await api.get(`/dashboard/${userId}`);
+                const [
+                    dashboardRes,
+                    platformsRes,
+                    difficultyRes,
+                    topicsRes,
+                    monthlyRes,
+                ] = await Promise.all([
+                    api.get(`/dashboard/${userId}`),
+                    api.get(`/dashboard/platforms/${userId}`),
+                    api.get(`/dashboard/difficulty/${userId}`),
+                    api.get(`/dashboard/topics/${userId}`),
+                    api.get(`/dashboard/monthly/${userId}`),
+                ]);
 
-                if (response.data.success) {
-                    setDashboard(response.data.data);
-                } else {
-                    setError("Unable to fetch dashboard data.");
-                }
+                setDashboard(dashboardRes.data.data);
+                setPlatforms(platformsRes.data.data);
+                setDifficulty(difficultyRes.data.data);
+                setTopics(topicsRes.data.data);
+                setMonthly(monthlyRes.data.data);
 
             } catch (error) {
                 console.error("Dashboard API Error:", error);
-                setError("Failed to connect to the backend.");
+                setError("Unable to load dashboard data. Please check the backend.");
             } finally {
                 setLoading(false);
             }
         };
 
-        fetchDashboard();
+        fetchDashboardData();
     }, []);
 
-    // Convert minutes into hours and minutes
     const formatCodingTime = (minutes) => {
         const hours = Math.floor(minutes / 60);
         const remainingMinutes = minutes % 60;
@@ -42,11 +66,11 @@ function Dashboard() {
     };
 
     if (loading) {
-        return <h2>Loading dashboard...</h2>;
+        return <div className="loading-message">Loading dashboard...</div>;
     }
 
     if (error) {
-        return <h2>{error}</h2>;
+        return <div className="error-message">{error}</div>;
     }
 
     return (
@@ -57,6 +81,7 @@ function Dashboard() {
                 <p>Here's an overview of your coding progress.</p>
             </div>
 
+            {/* Statistics Cards */}
             <div className="stats-grid">
 
                 <div className="stat-card">
@@ -77,6 +102,63 @@ function Dashboard() {
                 <div className="stat-card">
                     <h3>Practice Days</h3>
                     <h1>{dashboard.total_practice_days}</h1>
+                </div>
+
+            </div>
+
+
+            {/* Analytics Charts */}
+            <div className="charts-grid">
+
+                <div className="chart-card">
+                    <h3>Platform-wise Problems</h3>
+
+                    {platforms.length > 0 ? (
+                        <div className="chart-container">
+                            <PlatformChart data={platforms} />
+                        </div>
+                    ) : (
+                        <p className="empty-message">No platform data available.</p>
+                    )}
+                </div>
+
+
+                <div className="chart-card">
+                    <h3>Problem Difficulty</h3>
+
+                    {difficulty.length > 0 ? (
+                        <div className="chart-container">
+                            <DifficultyChart data={difficulty} />
+                        </div>
+                    ) : (
+                        <p className="empty-message">No difficulty data available.</p>
+                    )}
+                </div>
+
+
+                <div className="chart-card">
+                    <h3>Topic-wise Progress</h3>
+
+                    {topics.length > 0 ? (
+                        <div className="chart-container">
+                            <TopicChart data={topics} />
+                        </div>
+                    ) : (
+                        <p className="empty-message">No topic data available.</p>
+                    )}
+                </div>
+
+
+                <div className="chart-card monthly-chart-card">
+                    <h3>Monthly Coding Activity</h3>
+
+                    {monthly.length > 0 ? (
+                        <div className="chart-container">
+                            <MonthlyChart data={monthly} />
+                        </div>
+                    ) : (
+                        <p className="empty-message">No monthly data available.</p>
+                    )}
                 </div>
 
             </div>
