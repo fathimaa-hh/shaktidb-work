@@ -115,3 +115,22 @@ CREATE TABLE daily_activity (
         REFERENCES users(user_id)
         ON DELETE CASCADE
 );
+
+CREATE TABLE achievements (
+
+    achievement_id SERIAL PRIMARY KEY,
+
+    user_id INT NOT NULL,
+
+    achievement_name VARCHAR(100) NOT NULL,
+
+    description TEXT,
+
+    achieved_date DATE DEFAULT CURRENT_DATE,
+
+    CONSTRAINT fk_achievement_user
+        FOREIGN KEY(user_id)
+        REFERENCES users(user_id)
+        ON DELETE CASCADE
+
+);
