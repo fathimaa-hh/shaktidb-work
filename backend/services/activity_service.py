@@ -91,7 +91,7 @@ def get_all_activities(user_id):
         cursor.close()
         connection.close()
 
-def get_activity_by_id(activity_id):
+def get_activity_by_id(activity_id, user_id):
 
     connection = get_connection()
 
@@ -136,6 +136,7 @@ def get_activity_by_id(activity_id):
 
 def update_activity(
     activity_id,
+    user_id,
     practice_date,
     coding_minutes,
     problems_solved
@@ -185,8 +186,7 @@ def update_activity(
 
         cursor.close()
         connection.close()
-
-def delete_activity(activity_id):
+def delete_activity(activity_id, user_id):
 
     connection = get_connection()
 

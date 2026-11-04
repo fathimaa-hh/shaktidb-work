@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import api from "../services/api";
+import { useAuth } from "../context/AuthContext";
 
 import {
     PlatformChart,
@@ -16,7 +17,8 @@ import {
 } from "../components/AnalyticsCharts";
 
 function Analytics() {
-    const USER_ID = 1;
+    const { user } = useAuth();
+    const USER_ID = user?.user_id;
 
     const [dashboard, setDashboard] = useState(null);
     const [platforms, setPlatforms] = useState([]);
@@ -30,6 +32,8 @@ function Analytics() {
     const [error, setError] = useState("");
 
     useEffect(() => {
+        if (!USER_ID) return;
+
         const fetchAnalytics = async () => {
             try {
                 setLoading(true);
@@ -66,11 +70,12 @@ function Analytics() {
         };
 
         fetchAnalytics();
-    }, []);
+    }, [USER_ID]);
 
     const formatTime = (minutes) => {
-        const hours = Math.floor(minutes / 60);
-        const remaining = minutes % 60;
+        const totalMinutes = Number(minutes || 0);
+        const hours = Math.floor(totalMinutes / 60);
+        const remaining = totalMinutes % 60;
 
         return `${hours}h ${remaining}m`;
     };
@@ -81,7 +86,7 @@ function Analytics() {
 
     const averageScore = contests.length
         ? (
-            contests.reduce((sum, c) => sum + Number(c.score), 0) /
+            contests.reduce((sum, c) => sum + Number(c.score || 0), 0) /
             contests.length
         ).toFixed(2)
         : "0.00";
@@ -111,6 +116,10 @@ function Analytics() {
         return <div className="error-message">{error}</div>;
     }
 
+    if (!dashboard) {
+        return <div className="empty-message">No analytics data available.</div>;
+    }
+
     return (
         <div className="analytics-page">
 
@@ -132,22 +141,24 @@ function Analytics() {
 
                     <div className="analytics-stat-card">
                         <span>Total Problems Solved</span>
-                        <h2>{dashboard.total_problems}</h2>
+                        <h2>{dashboard.total_problems || 0}</h2>
                     </div>
 
                     <div className="analytics-stat-card">
                         <span>Contests Participated</span>
-                        <h2>{dashboard.total_contests}</h2>
+                        <h2>{dashboard.total_contests || 0}</h2>
                     </div>
 
                     <div className="analytics-stat-card">
                         <span>Total Coding Time</span>
-                        <h2>{formatTime(Number(dashboard.total_coding_minutes))}</h2>
+                        <h2>
+                            {formatTime(dashboard.total_coding_minutes)}
+                        </h2>
                     </div>
 
                     <div className="analytics-stat-card">
                         <span>Active Practice Days</span>
-                        <h2>{dashboard.total_practice_days}</h2>
+                        <h2>{dashboard.total_practice_days || 0}</h2>
                     </div>
 
                     <div className="analytics-stat-card">
@@ -175,7 +186,11 @@ function Analytics() {
                             <div className="analytics-chart-container">
                                 <PlatformChart data={platforms} />
                             </div>
-                        ) : <p className="empty-message">No platform data available.</p>}
+                        ) : (
+                            <p className="empty-message">
+                                No platform data available.
+                            </p>
+                        )}
                     </div>
 
                     <div className="analytics-chart-card">
@@ -184,7 +199,11 @@ function Analytics() {
                             <div className="analytics-chart-container">
                                 <DifficultyChart data={difficulty} />
                             </div>
-                        ) : <p className="empty-message">No difficulty data available.</p>}
+                        ) : (
+                            <p className="empty-message">
+                                No difficulty data available.
+                            </p>
+                        )}
                     </div>
 
                     <div className="analytics-chart-card">
@@ -193,7 +212,11 @@ function Analytics() {
                             <div className="analytics-chart-container">
                                 <TopicChart data={topics} />
                             </div>
-                        ) : <p className="empty-message">No topic data available.</p>}
+                        ) : (
+                            <p className="empty-message">
+                                No topic data available.
+                            </p>
+                        )}
                     </div>
 
                     <div className="analytics-chart-card">
@@ -202,7 +225,11 @@ function Analytics() {
                             <div className="analytics-chart-container">
                                 <MonthlyChart data={monthly} />
                             </div>
-                        ) : <p className="empty-message">No monthly data available.</p>}
+                        ) : (
+                            <p className="empty-message">
+                                No monthly data available.
+                            </p>
+                        )}
                     </div>
 
                 </div>
@@ -220,7 +247,11 @@ function Analytics() {
                             <div className="analytics-chart-container">
                                 <ContestRankChart data={contests} />
                             </div>
-                        ) : <p className="empty-message">No contest data available.</p>}
+                        ) : (
+                            <p className="empty-message">
+                                No contest data available.
+                            </p>
+                        )}
                     </div>
 
                     <div className="analytics-chart-card">
@@ -229,7 +260,11 @@ function Analytics() {
                             <div className="analytics-chart-container">
                                 <ContestScoreChart data={contests} />
                             </div>
-                        ) : <p className="empty-message">No contest data available.</p>}
+                        ) : (
+                            <p className="empty-message">
+                                No contest data available.
+                            </p>
+                        )}
                     </div>
 
                 </div>
@@ -240,6 +275,7 @@ function Analytics() {
                 <h2>Practice Consistency</h2>
 
                 <div className="analytics-insights">
+
                     <div className="insight-card">
                         <span>Most Practiced Platform</span>
                         <h3>{topPlatform}</h3>
@@ -259,6 +295,7 @@ function Analytics() {
                         <span>Days with Recorded Activity</span>
                         <h3>{activeDays}</h3>
                     </div>
+
                 </div>
 
                 <div className="analytics-charts-grid">
@@ -269,7 +306,11 @@ function Analytics() {
                             <div className="analytics-chart-container">
                                 <DailyCodingChart data={activities} />
                             </div>
-                        ) : <p className="empty-message">No activity data available.</p>}
+                        ) : (
+                            <p className="empty-message">
+                                No activity data available.
+                            </p>
+                        )}
                     </div>
 
                     <div className="analytics-chart-card">
@@ -278,7 +319,11 @@ function Analytics() {
                             <div className="analytics-chart-container">
                                 <DailyProblemsChart data={activities} />
                             </div>
-                        ) : <p className="empty-message">No activity data available.</p>}
+                        ) : (
+                            <p className="empty-message">
+                                No activity data available.
+                            </p>
+                        )}
                     </div>
 
                 </div>

@@ -1,9 +1,11 @@
 import { useEffect, useMemo, useState } from "react";
 import api from "../services/api";
 import ContestForm from "../components/ContestForm";
+import { useAuth } from "../context/AuthContext";
 
 function Contests() {
-    const USER_ID = 1;
+    const { user } = useAuth();
+    const USER_ID = user?.user_id;
 
     const [contests, setContests] = useState([]);
     const [platforms, setPlatforms] = useState([]);
@@ -15,7 +17,10 @@ function Contests() {
     const [platformFilter, setPlatformFilter] = useState("All");
     const [loading, setLoading] = useState(true);
 
+    // Fetch contests and platforms
     const fetchData = async () => {
+        if (!USER_ID) return;
+
         try {
             setLoading(true);
 
@@ -26,49 +31,74 @@ function Contests() {
 
             setContests(contestResponse.data.data || []);
             setPlatforms(platformResponse.data.data || []);
+
         } catch (error) {
             console.error("Error loading contests:", error);
+
             alert(
                 error.response?.data?.message ||
                 "Unable to load contests. Check whether the backend is running."
             );
+
         } finally {
             setLoading(false);
         }
     };
 
+    // Load data when logged-in user becomes available
     useEffect(() => {
-        fetchData();
-    }, []);
+        if (USER_ID) {
+            fetchData();
+        }
+    }, [USER_ID]);
 
+    // Add Contest
     const handleAdd = async (formData) => {
         try {
-            await api.post("/contests", {
-                user_id: USER_ID,
-                ...formData
-            });
+            const response = await api.post("/contests", formData);
 
-            alert("Contest added successfully!");
-            setShowForm(false);
-            fetchData();
+            if (response.data.success) {
+                alert("Contest added successfully!");
+                setShowForm(false);
+                await fetchData();
+            }
+
         } catch (error) {
-            alert(error.response?.data?.message || "Failed to add contest.");
+            console.error("Add Contest Error:", error);
+
+            alert(
+                error.response?.data?.message ||
+                "Failed to add contest."
+            );
         }
     };
 
+    // Update Contest
     const handleUpdate = async (formData) => {
         try {
-            await api.put(`/contest/${editingContest.contest_id}`, formData);
+            const response = await api.put(
+                `/contest/${editingContest.contest_id}`,
+                formData
+            );
 
-            alert("Contest updated successfully!");
-            setEditingContest(null);
-            setShowForm(false);
-            fetchData();
+            if (response.data.success) {
+                alert("Contest updated successfully!");
+                setEditingContest(null);
+                setShowForm(false);
+                await fetchData();
+            }
+
         } catch (error) {
-            alert(error.response?.data?.message || "Failed to update contest.");
+            console.error("Update Contest Error:", error);
+
+            alert(
+                error.response?.data?.message ||
+                "Failed to update contest."
+            );
         }
     };
 
+    // Delete Contest
     const handleDelete = async (contestId) => {
         const confirmed = window.confirm(
             "Are you sure you want to delete this contest?"
@@ -77,24 +107,36 @@ function Contests() {
         if (!confirmed) return;
 
         try {
-            await api.delete(`/contest/${contestId}`);
-            alert("Contest deleted successfully!");
-            fetchData();
+            const response = await api.delete(`/contest/${contestId}`);
+
+            if (response.data.success) {
+                alert("Contest deleted successfully!");
+                await fetchData();
+            }
+
         } catch (error) {
-            alert(error.response?.data?.message || "Failed to delete contest.");
+            console.error("Delete Contest Error:", error);
+
+            alert(
+                error.response?.data?.message ||
+                "Failed to delete contest."
+            );
         }
     };
 
+    // Open Add Form
     const openAddForm = () => {
         setEditingContest(null);
         setShowForm(true);
     };
 
+    // Open Edit Form
     const openEditForm = (contest) => {
         setEditingContest(contest);
         setShowForm(true);
     };
 
+    // Search and Filter
     const filteredContests = useMemo(() => {
         return contests.filter((contest) => {
             const matchesSearch = contest.contest_name
@@ -109,6 +151,7 @@ function Contests() {
         });
     }, [contests, search, platformFilter]);
 
+    // Contest Statistics
     const totalContests = contests.length;
 
     const bestRank = contests.length
@@ -117,7 +160,7 @@ function Contests() {
 
     const averageScore = contests.length
         ? (
-            contests.reduce((sum, c) => sum + Number(c.score), 0) /
+            contests.reduce((sum, c) => sum + Number(c.score || 0), 0) /
             contests.length
         ).toFixed(2)
         : "0.00";
@@ -128,6 +171,7 @@ function Contests() {
 
     return (
         <div className="contests-page">
+
             <div className="page-header">
                 <div>
                     <h1>Contest Management</h1>
@@ -137,16 +181,15 @@ function Contests() {
                 <button
                     type="button"
                     className="primary-btn"
-                    onClick={() => {
-                        setEditingContest(null);
-                        setShowForm(true);
-                    }}
+                    onClick={openAddForm}
                 >
                     + Add Contest
                 </button>
             </div>
 
+            {/* Contest Statistics */}
             <div className="contest-stats">
+
                 <div className="contest-stat-card">
                     <h3>Total Contests</h3>
                     <p>{totalContests}</p>
@@ -161,10 +204,13 @@ function Contests() {
                     <h3>Average Score</h3>
                     <p>{averageScore}</p>
                 </div>
+
             </div>
 
+            {/* Add/Edit Contest Form */}
             {showForm && (
                 <div className="contest-form-card">
+
                     <h2>
                         {editingContest ? "Edit Contest" : "Add New Contest"}
                     </h2>
@@ -178,10 +224,13 @@ function Contests() {
                             setEditingContest(null);
                         }}
                     />
+
                 </div>
             )}
 
+            {/* Search and Filter */}
             <div className="contest-toolbar">
+
                 <input
                     type="text"
                     placeholder="Search contests..."
@@ -203,11 +252,16 @@ function Contests() {
                             {platform.platform_name}
                         </option>
                     ))}
+
                 </select>
+
             </div>
 
+            {/* Contests Table */}
             <div className="contest-table-container">
+
                 <table className="contest-table">
+
                     <thead>
                         <tr>
                             <th>Contest</th>
@@ -220,22 +274,31 @@ function Contests() {
                     </thead>
 
                     <tbody>
+
                         {filteredContests.length > 0 ? (
+
                             filteredContests.map((contest) => (
+
                                 <tr key={contest.contest_id}>
+
                                     <td>{contest.contest_name}</td>
+
                                     <td>
                                         <span className="platform-badge">
                                             {contest.platform_name}
                                         </span>
                                     </td>
+
                                     <td>#{contest.rank}</td>
                                     <td>{contest.score}</td>
+
                                     <td>
                                         {String(contest.contest_date).slice(0, 10)}
                                     </td>
+
                                     <td>
                                         <div className="contest-actions">
+
                                             <button
                                                 className="edit-btn"
                                                 onClick={() => openEditForm(contest)}
@@ -251,20 +314,30 @@ function Contests() {
                                             >
                                                 Delete
                                             </button>
+
                                         </div>
                                     </td>
+
                                 </tr>
+
                             ))
+
                         ) : (
+
                             <tr>
                                 <td colSpan="6" className="empty-state">
                                     No contests found. Add your first contest!
                                 </td>
                             </tr>
+
                         )}
+
                     </tbody>
+
                 </table>
+
             </div>
+
         </div>
     );
 }

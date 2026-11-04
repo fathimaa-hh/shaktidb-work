@@ -103,7 +103,7 @@ def get_all_contests(user_id):
         cursor.close()
         connection.close()
 
-def get_contest_by_id(contest_id):
+def get_contest_by_id(contest_id, user_id):
 
     connection = get_connection()
 
@@ -152,6 +152,7 @@ def get_contest_by_id(contest_id):
 
 def update_contest(
     contest_id,
+    user_id,
     platform_id,
     contest_name,
     rank,
@@ -209,7 +210,7 @@ def update_contest(
         connection.close()
 
 
-def delete_contest(contest_id):
+def delete_contest(contest_id, user_id):
 
     connection = get_connection()
 

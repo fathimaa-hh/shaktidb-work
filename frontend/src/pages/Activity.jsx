@@ -1,9 +1,11 @@
 import { useEffect, useMemo, useState } from "react";
 import api from "../services/api";
 import ActivityForm from "../components/ActivityForm";
+import { useAuth } from "../context/AuthContext";
 
 function Activity() {
-    const USER_ID = 1;
+    const { user } = useAuth();
+    const USER_ID = user?.user_id;
 
     const [activities, setActivities] = useState([]);
     const [showForm, setShowForm] = useState(false);
@@ -11,58 +13,83 @@ function Activity() {
     const [searchDate, setSearchDate] = useState("");
     const [loading, setLoading] = useState(true);
 
+    // Fetch user's activities
     const fetchActivities = async () => {
+        if (!USER_ID) return;
+
         try {
             setLoading(true);
 
             const response = await api.get(`/activities/${USER_ID}`);
             setActivities(response.data.data || []);
+
         } catch (error) {
             console.error("Error fetching activities:", error);
+
             alert(
                 error.response?.data?.message ||
                 "Unable to load activities. Check the backend."
             );
+
         } finally {
             setLoading(false);
         }
     };
 
+    // Load activities when logged-in user becomes available
     useEffect(() => {
-        fetchActivities();
-    }, []);
+        if (USER_ID) {
+            fetchActivities();
+        }
+    }, [USER_ID]);
 
+    // Add Activity
     const handleAdd = async (formData) => {
         try {
-            await api.post("/activities", {
-                user_id: USER_ID,
-                ...formData
-            });
+            const response = await api.post("/activities", formData);
 
-            alert("Activity added successfully!");
-            setShowForm(false);
-            fetchActivities();
+            if (response.data.success) {
+                alert("Activity added successfully!");
+                setShowForm(false);
+                await fetchActivities();
+            }
+
         } catch (error) {
-            alert(error.response?.data?.message || "Failed to add activity.");
+            console.error("Add Activity Error:", error);
+
+            alert(
+                error.response?.data?.message ||
+                "Failed to add activity."
+            );
         }
     };
 
+    // Update Activity
     const handleUpdate = async (formData) => {
         try {
-            await api.put(
+            const response = await api.put(
                 `/activity/${editingActivity.activity_id}`,
                 formData
             );
 
-            alert("Activity updated successfully!");
-            setEditingActivity(null);
-            setShowForm(false);
-            fetchActivities();
+            if (response.data.success) {
+                alert("Activity updated successfully!");
+                setEditingActivity(null);
+                setShowForm(false);
+                await fetchActivities();
+            }
+
         } catch (error) {
-            alert(error.response?.data?.message || "Failed to update activity.");
+            console.error("Update Activity Error:", error);
+
+            alert(
+                error.response?.data?.message ||
+                "Failed to update activity."
+            );
         }
     };
 
+    // Delete Activity
     const handleDelete = async (activityId) => {
         const confirmed = window.confirm(
             "Are you sure you want to delete this activity?"
@@ -71,25 +98,36 @@ function Activity() {
         if (!confirmed) return;
 
         try {
-            await api.delete(`/activity/${activityId}`);
+            const response = await api.delete(`/activity/${activityId}`);
 
-            alert("Activity deleted successfully!");
-            fetchActivities();
+            if (response.data.success) {
+                alert("Activity deleted successfully!");
+                await fetchActivities();
+            }
+
         } catch (error) {
-            alert(error.response?.data?.message || "Failed to delete activity.");
+            console.error("Delete Activity Error:", error);
+
+            alert(
+                error.response?.data?.message ||
+                "Failed to delete activity."
+            );
         }
     };
 
+    // Open Add Form
     const openAddForm = () => {
         setEditingActivity(null);
         setShowForm(true);
     };
 
+    // Open Edit Form
     const openEditForm = (activity) => {
         setEditingActivity(activity);
         setShowForm(true);
     };
 
+    // Filter activities by date
     const filteredActivities = useMemo(() => {
         if (!searchDate) return activities;
 
@@ -99,6 +137,7 @@ function Activity() {
         );
     }, [activities, searchDate]);
 
+    // Activity Statistics
     const totalMinutes = activities.reduce(
         (sum, activity) => sum + Number(activity.coding_minutes || 0),
         0
@@ -119,6 +158,7 @@ function Activity() {
         ? Math.round(totalMinutes / activeDays)
         : 0;
 
+    // Format coding time
     const formatTime = (minutes) => {
         const hours = Math.floor(minutes / 60);
         const remainingMinutes = minutes % 60;
@@ -135,6 +175,7 @@ function Activity() {
 
     return (
         <div className="activity-page">
+
             <div className="page-header">
                 <div>
                     <h1>Daily Activity</h1>
@@ -146,7 +187,9 @@ function Activity() {
                 </button>
             </div>
 
+            {/* Activity Statistics */}
             <div className="activity-stats">
+
                 <div className="activity-stat-card">
                     <h3>Total Coding Time</h3>
                     <p>{formatTime(totalMinutes)}</p>
@@ -166,12 +209,17 @@ function Activity() {
                     <h3>Average Daily Time</h3>
                     <p>{formatTime(averageMinutes)}</p>
                 </div>
+
             </div>
 
+            {/* Add/Edit Activity Form */}
             {showForm && (
                 <div className="activity-form-card">
+
                     <h2>
-                        {editingActivity ? "Edit Activity" : "Add Daily Activity"}
+                        {editingActivity
+                            ? "Edit Activity"
+                            : "Add Daily Activity"}
                     </h2>
 
                     <ActivityForm
@@ -182,17 +230,22 @@ function Activity() {
                             setEditingActivity(null);
                         }}
                     />
+
                 </div>
             )}
 
+            {/* Activity History and Date Filter */}
             <div className="activity-toolbar">
+
                 <div>
                     <h2>Activity History</h2>
                     <p>Your recorded daily coding activities.</p>
                 </div>
 
                 <div className="activity-filter">
+
                     <label>Filter by date:</label>
+
                     <input
                         type="date"
                         value={searchDate}
@@ -207,11 +260,16 @@ function Activity() {
                             Clear
                         </button>
                     )}
+
                 </div>
+
             </div>
 
+            {/* Activity Table */}
             <div className="activity-table-container">
+
                 <table className="activity-table">
+
                     <thead>
                         <tr>
                             <th>Date</th>
@@ -222,9 +280,13 @@ function Activity() {
                     </thead>
 
                     <tbody>
+
                         {filteredActivities.length > 0 ? (
+
                             filteredActivities.map((activity) => (
+
                                 <tr key={activity.activity_id}>
+
                                     <td>
                                         {String(activity.practice_date).slice(0, 10)}
                                     </td>
@@ -237,6 +299,7 @@ function Activity() {
 
                                     <td>
                                         <div className="activity-actions">
+
                                             <button
                                                 className="edit-btn"
                                                 onClick={() => openEditForm(activity)}
@@ -252,20 +315,30 @@ function Activity() {
                                             >
                                                 Delete
                                             </button>
+
                                         </div>
                                     </td>
+
                                 </tr>
+
                             ))
+
                         ) : (
+
                             <tr>
                                 <td colSpan="4" className="empty-state">
                                     No activities found.
                                 </td>
                             </tr>
+
                         )}
+
                     </tbody>
+
                 </table>
+
             </div>
+
         </div>
     );
 }

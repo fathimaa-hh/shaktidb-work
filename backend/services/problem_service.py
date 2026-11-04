@@ -117,19 +117,15 @@ def get_all_problems(user_id):
         cursor.close()
         connection.close()
 
-def get_problem_by_id(history_id):
-
+def get_problem_by_id(history_id, user_id):
     connection = get_connection()
 
     if connection is None:
         return False, "Database connection failed."
 
-    cursor = connection.cursor(
-        cursor_factory=RealDictCursor
-    )
+    cursor = connection.cursor(cursor_factory=RealDictCursor)
 
     try:
-
         cursor.execute(
             """
             SELECT
@@ -145,15 +141,12 @@ def get_problem_by_id(history_id):
                 h.notes,
                 h.solved_date
             FROM user_problem_history h
-            JOIN problems p
-                ON h.problem_id = p.problem_id
-            JOIN platforms pf
-                ON p.platform_id = pf.platform_id
-            JOIN topics t
-                ON p.topic_id = t.topic_id
-            WHERE h.history_id = %s;
+            JOIN problems p ON h.problem_id = p.problem_id
+            JOIN platforms pf ON p.platform_id = pf.platform_id
+            JOIN topics t ON p.topic_id = t.topic_id
+            WHERE h.history_id = %s AND h.user_id = %s;
             """,
-            (history_id,)
+            (history_id, user_id)
         )
 
         problem = cursor.fetchone()
@@ -164,34 +157,28 @@ def get_problem_by_id(history_id):
         return True, problem
 
     except Exception as error:
-
         return False, str(error)
 
     finally:
-
         cursor.close()
         connection.close()
-
 def update_problem(
     history_id,
+    user_id,
     status,
     attempts,
     time_taken,
     language,
     notes
 ):
-
     connection = get_connection()
 
     if connection is None:
         return False, "Database connection failed."
 
-    cursor = connection.cursor(
-        cursor_factory=RealDictCursor
-    )
+    cursor = connection.cursor(cursor_factory=RealDictCursor)
 
     try:
-
         cursor.execute(
             """
             UPDATE user_problem_history
@@ -201,7 +188,7 @@ def update_problem(
                 time_taken = %s,
                 language = %s,
                 notes = %s
-            WHERE history_id = %s;
+            WHERE history_id = %s AND user_id = %s;
             """,
             (
                 status,
@@ -209,7 +196,8 @@ def update_problem(
                 time_taken,
                 language,
                 notes,
-                history_id
+                history_id,
+                user_id
             )
         )
 
@@ -217,56 +205,47 @@ def update_problem(
             return False, "Problem not found."
 
         connection.commit()
-
         return True, "Problem updated successfully."
 
     except Exception as error:
-
         connection.rollback()
         return False, str(error)
 
     finally:
-
         cursor.close()
         connection.close()
 
-def delete_problem(history_id):
-
+def delete_problem(history_id, user_id):
     connection = get_connection()
 
     if connection is None:
         return False, "Database connection failed."
 
-    cursor = connection.cursor(
-        cursor_factory=RealDictCursor
-    )
+    cursor = connection.cursor(cursor_factory=RealDictCursor)
 
     try:
-
         cursor.execute(
             """
             DELETE FROM user_problem_history
-            WHERE history_id = %s;
+            WHERE history_id = %s AND user_id = %s;
             """,
-            (history_id,)
+            (history_id, user_id)
         )
 
         if cursor.rowcount == 0:
             return False, "Problem not found."
 
         connection.commit()
-
         return True, "Problem deleted successfully."
 
     except Exception as error:
-
         connection.rollback()
         return False, str(error)
 
     finally:
-
         cursor.close()
         connection.close()
+        
 def get_available_problems():
 
     connection = get_connection()

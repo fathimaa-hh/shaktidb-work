@@ -90,7 +90,7 @@ def get_achievements(user_id):
         cursor.close()
         connection.close()
 
-def delete_achievement(achievement_id):
+def delete_achievement(achievement_id, user_id):
 
     connection = get_connection()
 

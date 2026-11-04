@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import api from "../services/api";
+import { useAuth } from "../context/AuthContext";
 
 import {
     PlatformChart,
@@ -9,6 +10,8 @@ import {
 } from "../components/Charts";
 
 function Dashboard() {
+    const { user } = useAuth();
+
     const [dashboard, setDashboard] = useState(null);
     const [platforms, setPlatforms] = useState([]);
     const [difficulty, setDifficulty] = useState([]);
@@ -18,14 +21,15 @@ function Dashboard() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
 
-    // Temporary user ID for development
-    const userId = 1;
-
     useEffect(() => {
+        if (!user?.user_id) return;
+
         const fetchDashboardData = async () => {
             try {
                 setLoading(true);
                 setError("");
+
+                const userId = user.user_id;
 
                 const [
                     dashboardRes,
@@ -47,18 +51,22 @@ function Dashboard() {
                 setTopics(topicsRes.data.data);
                 setMonthly(monthlyRes.data.data);
 
-            } catch (error) {
-                console.error("Dashboard API Error:", error);
-                setError("Unable to load dashboard data. Please check the backend.");
+            } catch (err) {
+                console.error("Dashboard API Error:", err);
+
+                setError(
+                    err.response?.data?.message ||
+                    "Unable to load dashboard data."
+                );
             } finally {
                 setLoading(false);
             }
         };
 
         fetchDashboardData();
-    }, []);
+    }, [user]);
 
-    const formatCodingTime = (minutes) => {
+    const formatCodingTime = (minutes = 0) => {
         const hours = Math.floor(minutes / 60);
         const remainingMinutes = minutes % 60;
 
@@ -73,6 +81,10 @@ function Dashboard() {
         return <div className="error-message">{error}</div>;
     }
 
+    if (!dashboard) {
+        return <div className="error-message">Dashboard data unavailable.</div>;
+    }
+
     return (
         <div className="dashboard-page">
 
@@ -81,7 +93,6 @@ function Dashboard() {
                 <p>Here's an overview of your coding progress.</p>
             </div>
 
-            {/* Statistics Cards */}
             <div className="stats-grid">
 
                 <div className="stat-card">
@@ -106,8 +117,6 @@ function Dashboard() {
 
             </div>
 
-
-            {/* Analytics Charts */}
             <div className="charts-grid">
 
                 <div className="chart-card">
@@ -122,7 +131,6 @@ function Dashboard() {
                     )}
                 </div>
 
-
                 <div className="chart-card">
                     <h3>Problem Difficulty</h3>
 
@@ -135,7 +143,6 @@ function Dashboard() {
                     )}
                 </div>
 
-
                 <div className="chart-card">
                     <h3>Topic-wise Progress</h3>
 
@@ -147,7 +154,6 @@ function Dashboard() {
                         <p className="empty-message">No topic data available.</p>
                     )}
                 </div>
-
 
                 <div className="chart-card monthly-chart-card">
                     <h3>Monthly Coding Activity</h3>
@@ -162,7 +168,6 @@ function Dashboard() {
                 </div>
 
             </div>
-
         </div>
     );
 }

@@ -1,4 +1,5 @@
-from flask import Blueprint, request
+from flask import Blueprint, request, session
+
 from services.problem_service import (
     add_problem,
     get_all_problems,
@@ -7,26 +8,24 @@ from services.problem_service import (
     delete_problem,
     get_available_problems
 )
+
 from utils.response import success_response, error_response
+from utils.auth import login_required
 
 problem_bp = Blueprint("problem", __name__)
 
-@problem_bp.route("/problems", methods=["POST"])
-def create_problem():
 
+@problem_bp.route("/problems", methods=["POST"])
+@login_required
+def create_problem():
     data = request.get_json()
 
     if not data:
         return error_response("No JSON data received.")
 
     required_fields = [
-        "user_id",
-        "problem_id",
-        "status",
-        "attempts",
-        "time_taken",
-        "language",
-        "notes"
+        "problem_id", "status", "attempts",
+        "time_taken", "language", "notes"
     ]
 
     for field in required_fields:
@@ -37,7 +36,7 @@ def create_problem():
         return error_response("Invalid problem status.")
 
     success, message = add_problem(
-        data["user_id"],
+        session["user_id"],
         data["problem_id"],
         data["status"],
         data["attempts"],
@@ -51,46 +50,42 @@ def create_problem():
 
     return error_response(message)
 
-@problem_bp.route("/problems/<int:user_id>", methods=["GET"])
-def view_all_problems(user_id):
 
-    success, result = get_all_problems(user_id)
+@problem_bp.route("/problems/<int:user_id>", methods=["GET"])
+@login_required
+def view_all_problems(user_id):
+    if user_id != session["user_id"]:
+        return error_response("Access denied.", 403)
+
+    success, result = get_all_problems(session["user_id"])
 
     if success:
-
-        return success_response(
-            "Problems retrieved successfully.",
-            result
-        )
+        return success_response("Problems retrieved successfully.", result)
 
     return error_response(result)
-@problem_bp.route("/problem/<int:history_id>", methods=["GET"])
-def view_problem(history_id):
 
-    success, result = get_problem_by_id(history_id)
+
+@problem_bp.route("/problem/<int:history_id>", methods=["GET"])
+@login_required
+def view_problem(history_id):
+    success, result = get_problem_by_id(history_id, session["user_id"])
 
     if success:
-        return success_response(
-            "Problem retrieved successfully.",
-            result
-        )
+        return success_response("Problem retrieved successfully.", result)
 
     return error_response(result, 404)
 
-@problem_bp.route("/problem/<int:history_id>", methods=["PUT"])
-def edit_problem(history_id):
 
+@problem_bp.route("/problem/<int:history_id>", methods=["PUT"])
+@login_required
+def edit_problem(history_id):
     data = request.get_json()
 
     if not data:
         return error_response("No JSON data received.")
 
     required_fields = [
-        "status",
-        "attempts",
-        "time_taken",
-        "language",
-        "notes"
+        "status", "attempts", "time_taken", "language", "notes"
     ]
 
     for field in required_fields:
@@ -102,6 +97,7 @@ def edit_problem(history_id):
 
     success, message = update_problem(
         history_id,
+        session["user_id"],
         data["status"],
         data["attempts"],
         data["time_taken"],
@@ -113,24 +109,26 @@ def edit_problem(history_id):
         return success_response(message)
 
     return error_response(message, 404)
-@problem_bp.route("/problem/<int:history_id>", methods=["DELETE"])
-def remove_problem(history_id):
 
-    success, message = delete_problem(history_id)
+
+@problem_bp.route("/problem/<int:history_id>", methods=["DELETE"])
+@login_required
+def remove_problem(history_id):
+    success, message = delete_problem(history_id, session["user_id"])
 
     if success:
         return success_response(message)
 
     return error_response(message, 404)
+
+
 @problem_bp.route("/available-problems", methods=["GET"])
 def view_available_problems():
-
     success, result = get_available_problems()
 
     if success:
         return success_response(
-            "Available problems retrieved successfully.",
-            result
+            "Available problems retrieved successfully.", result
         )
 
     return error_response(result)

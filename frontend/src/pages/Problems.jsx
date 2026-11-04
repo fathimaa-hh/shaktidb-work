@@ -1,10 +1,11 @@
 import { useEffect, useState } from "react";
 import api from "../services/api";
 import ProblemForm from "../components/ProblemForm";
+import { useAuth } from "../context/AuthContext";
 
 function Problems() {
-
-    const userId = 1;
+    const { user } = useAuth();
+    const userId = user?.user_id;
 
     const [problems, setProblems] = useState([]);
     const [availableProblems, setAvailableProblems] = useState([]);
@@ -22,7 +23,6 @@ function Problems() {
 
     // Fetch user's problem history
     const fetchProblems = async () => {
-
         const response = await api.get(`/problems/${userId}`);
 
         if (response.data.success) {
@@ -34,7 +34,6 @@ function Problems() {
 
     // Fetch available problem definitions
     const fetchAvailableProblems = async () => {
-
         const response = await api.get("/available-problems");
 
         if (response.data.success) {
@@ -46,6 +45,7 @@ function Problems() {
 
     // Load both datasets
     const loadPageData = async () => {
+        if (!userId) return;
 
         try {
             setLoading(true);
@@ -64,22 +64,19 @@ function Problems() {
         }
     };
 
+    // Load data when logged-in user becomes available
     useEffect(() => {
-        loadPageData();
-    }, []);
+        if (userId) {
+            loadPageData();
+        }
+    }, [userId]);
 
     // Add Problem
     const handleAddProblem = async (formData) => {
-
         try {
-
-            const response = await api.post("/problems", {
-                user_id: userId,
-                ...formData
-            });
+            const response = await api.post("/problems", formData);
 
             if (response.data.success) {
-
                 setShowForm(false);
                 setMessage("Problem added successfully!");
                 setError("");
@@ -88,7 +85,6 @@ function Problems() {
             }
 
         } catch (error) {
-
             console.error("Add Problem Error:", error);
 
             setError(
@@ -100,9 +96,7 @@ function Problems() {
 
     // Edit Problem
     const handleEditProblem = async (formData) => {
-
         try {
-
             const response = await api.put(
                 `/problem/${editingProblem.history_id}`,
                 {
@@ -115,7 +109,6 @@ function Problems() {
             );
 
             if (response.data.success) {
-
                 setEditingProblem(null);
                 setMessage("Problem updated successfully!");
                 setError("");
@@ -124,7 +117,6 @@ function Problems() {
             }
 
         } catch (error) {
-
             console.error("Update Problem Error:", error);
 
             setError(
@@ -136,7 +128,6 @@ function Problems() {
 
     // Delete Problem
     const handleDeleteProblem = async (historyId) => {
-
         const confirmed = window.confirm(
             "Are you sure you want to delete this problem record?"
         );
@@ -144,11 +135,9 @@ function Problems() {
         if (!confirmed) return;
 
         try {
-
             const response = await api.delete(`/problem/${historyId}`);
 
             if (response.data.success) {
-
                 setMessage("Problem deleted successfully!");
                 setError("");
 
@@ -156,7 +145,6 @@ function Problems() {
             }
 
         } catch (error) {
-
             console.error("Delete Problem Error:", error);
 
             setError(
@@ -168,7 +156,6 @@ function Problems() {
 
     // Search and filter
     const filteredProblems = problems.filter((problem) => {
-
         const matchesSearch = problem.title
             .toLowerCase()
             .includes(search.toLowerCase());
@@ -193,7 +180,6 @@ function Problems() {
     }
 
     return (
-
         <div className="problems-page">
 
             <div className="page-heading">
@@ -202,7 +188,6 @@ function Problems() {
             </div>
 
             {/* Summary Cards */}
-
             <div className="problem-summary">
 
                 <div className="stat-card">
@@ -234,7 +219,6 @@ function Problems() {
             </div>
 
             {/* Actions */}
-
             <div className="problem-actions">
 
                 <button
@@ -260,7 +244,6 @@ function Problems() {
             )}
 
             {/* Search and Filters */}
-
             <div className="problem-toolbar">
 
                 <input
@@ -292,7 +275,6 @@ function Problems() {
             </div>
 
             {/* Problems Table */}
-
             <div className="problem-table-container">
 
                 <table className="problem-table">
@@ -394,7 +376,6 @@ function Problems() {
             </div>
 
             {/* Add Form */}
-
             {showForm && (
                 <ProblemForm
                     availableProblems={availableProblems}
@@ -404,7 +385,6 @@ function Problems() {
             )}
 
             {/* Edit Form */}
-
             {editingProblem && (
                 <ProblemForm
                     availableProblems={availableProblems}
