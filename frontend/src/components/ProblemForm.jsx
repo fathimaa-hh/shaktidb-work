@@ -1,6 +1,12 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
-function ProblemForm({ onSubmit, onClose }) {
+function ProblemForm({
+    onSubmit,
+    onClose,
+    availableProblems,
+    initialData = null,
+}) {
+    const isEditing = Boolean(initialData);
 
     const [formData, setFormData] = useState({
         problem_id: "",
@@ -10,6 +16,19 @@ function ProblemForm({ onSubmit, onClose }) {
         language: "Python",
         notes: "",
     });
+
+    useEffect(() => {
+        if (initialData) {
+            setFormData({
+                problem_id: initialData.problem_id,
+                status: initialData.status || "Solved",
+                attempts: initialData.attempts,
+                time_taken: initialData.time_taken,
+                language: initialData.language,
+                notes: initialData.notes || "",
+            });
+        }
+    }, [initialData]);
 
     const handleChange = (e) => {
         const { name, value } = e.target;
@@ -32,13 +51,18 @@ function ProblemForm({ onSubmit, onClose }) {
     };
 
     return (
-        <div className="form-overlay">
-
-            <div className="problem-form">
+        <div className="form-overlay" onMouseDown={onClose}>
+            <div
+                className="problem-form"
+                onMouseDown={(e) => e.stopPropagation()}
+            >
 
                 <div className="form-header">
-                    <h2>Add Coding Problem</h2>
-                    <button type="button" onClick={onClose}>✕</button>
+                    <h2>{isEditing ? "Edit Problem" : "Add Coding Problem"}</h2>
+
+                    <button type="button" onClick={onClose}>
+                        ✕
+                    </button>
                 </div>
 
                 <form onSubmit={handleSubmit}>
@@ -49,15 +73,26 @@ function ProblemForm({ onSubmit, onClose }) {
                         name="problem_id"
                         value={formData.problem_id}
                         onChange={handleChange}
+                        disabled={isEditing}
                         required
                     >
                         <option value="">Select Problem</option>
-                        <option value="1">Two Sum</option>
-                        <option value="2">Reverse Linked List</option>
-                        <option value="3">Longest Substring Without Repeating Characters</option>
-                        <option value="4">Number of Islands</option>
+
+                        {availableProblems.map((problem) => (
+                            <option
+                                key={problem.problem_id}
+                                value={problem.problem_id}
+                            >
+                                {problem.title} ({problem.platform_name})
+                            </option>
+                        ))}
                     </select>
 
+                    {isEditing && (
+                        <small>
+                            The selected problem cannot be changed while editing.
+                        </small>
+                    )}
 
                     <label>Status</label>
 
@@ -65,11 +100,11 @@ function ProblemForm({ onSubmit, onClose }) {
                         name="status"
                         value={formData.status}
                         onChange={handleChange}
+                        required
                     >
                         <option value="Solved">Solved</option>
                         <option value="Attempted">Attempted</option>
                     </select>
-
 
                     <label>Number of Attempts</label>
 
@@ -82,7 +117,6 @@ function ProblemForm({ onSubmit, onClose }) {
                         required
                     />
 
-
                     <label>Time Taken (minutes)</label>
 
                     <input
@@ -94,13 +128,13 @@ function ProblemForm({ onSubmit, onClose }) {
                         required
                     />
 
-
                     <label>Programming Language</label>
 
                     <select
                         name="language"
                         value={formData.language}
                         onChange={handleChange}
+                        required
                     >
                         <option>Python</option>
                         <option>Java</option>
@@ -108,7 +142,6 @@ function ProblemForm({ onSubmit, onClose }) {
                         <option>C++</option>
                         <option>JavaScript</option>
                     </select>
-
 
                     <label>Notes</label>
 
@@ -119,7 +152,6 @@ function ProblemForm({ onSubmit, onClose }) {
                         placeholder="Describe your approach..."
                     />
 
-
                     <div className="form-actions">
 
                         <button type="button" onClick={onClose}>
@@ -127,15 +159,13 @@ function ProblemForm({ onSubmit, onClose }) {
                         </button>
 
                         <button type="submit">
-                            Save Problem
+                            {isEditing ? "Update Problem" : "Save Problem"}
                         </button>
 
                     </div>
 
                 </form>
-
             </div>
-
         </div>
     );
 }

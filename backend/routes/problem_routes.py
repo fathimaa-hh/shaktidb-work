@@ -4,7 +4,8 @@ from services.problem_service import (
     get_all_problems,
     get_problem_by_id,
     update_problem,
-    delete_problem
+    delete_problem,
+    get_available_problems
 )
 from utils.response import success_response, error_response
 
@@ -85,6 +86,7 @@ def edit_problem(history_id):
         return error_response("No JSON data received.")
 
     required_fields = [
+        "status",
         "attempts",
         "time_taken",
         "language",
@@ -95,8 +97,12 @@ def edit_problem(history_id):
         if field not in data:
             return error_response(f"{field} is required.")
 
+    if data["status"] not in ["Solved", "Attempted"]:
+        return error_response("Invalid problem status.")
+
     success, message = update_problem(
         history_id,
+        data["status"],
         data["attempts"],
         data["time_taken"],
         data["language"],
@@ -107,7 +113,6 @@ def edit_problem(history_id):
         return success_response(message)
 
     return error_response(message, 404)
-
 @problem_bp.route("/problem/<int:history_id>", methods=["DELETE"])
 def remove_problem(history_id):
 
@@ -117,3 +122,15 @@ def remove_problem(history_id):
         return success_response(message)
 
     return error_response(message, 404)
+@problem_bp.route("/available-problems", methods=["GET"])
+def view_available_problems():
+
+    success, result = get_available_problems()
+
+    if success:
+        return success_response(
+            "Available problems retrieved successfully.",
+            result
+        )
+
+    return error_response(result)

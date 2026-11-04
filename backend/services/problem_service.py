@@ -79,27 +79,27 @@ def get_all_problems(user_id):
         cursor.execute(
             """
             SELECT
-                h.status,
-                h.history_id,
-                p.title,
-                pf.platform_name,
-                t.topic_name,
-                p.difficulty,
-                h.attempts,
-                h.time_taken,
-                h.language,
-                h.notes,
-                h.solved_date,
-                h.problem_id
-            FROM user_problem_history h
-            JOIN problems p
-                ON h.problem_id = p.problem_id
-            JOIN platforms pf
-                ON p.platform_id = pf.platform_id
-            JOIN topics t
-                ON p.topic_id = t.topic_id
-            WHERE h.user_id = %s
-            ORDER BY h.solved_date DESC;
+            h.history_id,
+            h.problem_id,
+            p.title,
+            pf.platform_name,
+            t.topic_name,
+            p.difficulty,
+            h.status,
+            h.attempts,
+            h.time_taken,
+            h.language,
+            h.notes,
+            h.solved_date
+        FROM user_problem_history h
+        JOIN problems p
+            ON h.problem_id = p.problem_id
+        JOIN platforms pf
+            ON p.platform_id = pf.platform_id
+        JOIN topics t
+            ON p.topic_id = t.topic_id
+        WHERE h.user_id = %s
+        ORDER BY h.solved_date DESC;
             """,
             (user_id,)
         )
@@ -135,6 +135,7 @@ def get_problem_by_id(history_id):
             SELECT
                 h.history_id,
                 p.title,
+                h.problem_id,
                 pf.platform_name,
                 t.topic_name,
                 p.difficulty,
@@ -171,7 +172,14 @@ def get_problem_by_id(history_id):
         cursor.close()
         connection.close()
 
-def update_problem(history_id, attempts, time_taken, language, notes):
+def update_problem(
+    history_id,
+    status,
+    attempts,
+    time_taken,
+    language,
+    notes
+):
 
     connection = get_connection()
 
@@ -188,6 +196,7 @@ def update_problem(history_id, attempts, time_taken, language, notes):
             """
             UPDATE user_problem_history
             SET
+                status = %s,
                 attempts = %s,
                 time_taken = %s,
                 language = %s,
@@ -195,6 +204,7 @@ def update_problem(history_id, attempts, time_taken, language, notes):
             WHERE history_id = %s;
             """,
             (
+                status,
                 attempts,
                 time_taken,
                 language,
@@ -213,7 +223,6 @@ def update_problem(history_id, attempts, time_taken, language, notes):
     except Exception as error:
 
         connection.rollback()
-
         return False, str(error)
 
     finally:
@@ -252,6 +261,48 @@ def delete_problem(history_id):
     except Exception as error:
 
         connection.rollback()
+        return False, str(error)
+
+    finally:
+
+        cursor.close()
+        connection.close()
+def get_available_problems():
+
+    connection = get_connection()
+
+    if connection is None:
+        return False, "Database connection failed."
+
+    cursor = connection.cursor(
+        cursor_factory=RealDictCursor
+    )
+
+    try:
+
+        cursor.execute(
+            """
+            SELECT
+                p.problem_id,
+                p.title,
+                pf.platform_name,
+                t.topic_name,
+                p.difficulty
+            FROM problems p
+            JOIN platforms pf
+                ON p.platform_id = pf.platform_id
+            JOIN topics t
+                ON p.topic_id = t.topic_id
+            ORDER BY p.title;
+            """
+        )
+
+        problems = cursor.fetchall()
+
+        return True, problems
+
+    except Exception as error:
+
         return False, str(error)
 
     finally:

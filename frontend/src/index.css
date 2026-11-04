@@ -504,3 +504,65 @@ body {
     color: #15803d;
     margin-bottom: 15px;
 }
+/* Status Badges */
+
+.status-badge {
+    display: inline-block;
+    padding: 5px 10px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.status-badge.solved {
+    background: #dcfce7;
+    color: #15803d;
+}
+
+.status-badge.attempted {
+    background: #fef3c7;
+    color: #b45309;
+}
+
+/* Table Actions */
+
+.table-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.table-actions button {
+    padding: 7px 11px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 12px;
+}
+
+.edit-btn {
+    background: #dbeafe;
+    color: #1d4ed8;
+}
+
+.edit-btn:hover {
+    background: #bfdbfe;
+}
+
+.delete-btn {
+    background: #fee2e2;
+    color: #b91c1c;
+}
+
+.delete-btn:hover {
+    background: #fecaca;
+}
+
+/* Better table behaviour */
+
+.problem-table td {
+    white-space: nowrap;
+}
+
+.problem-table tr:hover {
+    background: #f8fafc;
+}
