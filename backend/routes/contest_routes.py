@@ -5,8 +5,9 @@ from services.contest_service import (
     get_all_contests,
     get_contest_by_id,
     update_contest,
-    delete_contest
-)   
+    delete_contest,
+    get_all_platforms
+)
 from utils.response import success_response, error_response
 
 contest_bp = Blueprint("contest", __name__)
@@ -116,3 +117,11 @@ def remove_contest(contest_id):
         return success_response(message)
 
     return error_response(message, 404)
+@contest_bp.route("/platforms", methods=["GET"])
+def fetch_platforms():
+    success, result = get_all_platforms()
+
+    if success:
+        return success_response("Platforms fetched successfully.", result)
+
+    return error_response(result)

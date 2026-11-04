@@ -74,6 +74,7 @@ def get_all_contests(user_id):
         cursor.execute(
             """
             SELECT
+                c.platform_id,
                 c.contest_id,
                 c.contest_name,
                 p.platform_name,
@@ -118,6 +119,7 @@ def get_contest_by_id(contest_id):
         cursor.execute(
             """
             SELECT
+                c.platform_id,
                 c.contest_id,
                 c.contest_name,
                 p.platform_name,
@@ -244,3 +246,28 @@ def delete_contest(contest_id):
 
         cursor.close()
         connection.close() 
+
+def get_all_platforms():
+    connection = get_connection()
+
+    if connection is None:
+        return False, "Database connection failed."
+
+    cursor = connection.cursor(cursor_factory=RealDictCursor)
+
+    try:
+        cursor.execute("""
+            SELECT platform_id, platform_name
+            FROM platforms
+            ORDER BY platform_id;
+        """)
+
+        platforms = cursor.fetchall()
+        return True, platforms
+
+    except Exception as error:
+        return False, str(error)
+
+    finally:
+        cursor.close()
+        connection.close()

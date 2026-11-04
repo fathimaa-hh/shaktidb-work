@@ -4,6 +4,7 @@ import Sidebar from "./components/Sidebar";
 import Navbar from "./components/Navbar";
 import Dashboard from "./pages/Dashboard";
 import Problems from "./pages/Problems";
+import Contests from "./pages/Contests";
 
 function AppLayout() {
     return (
@@ -19,6 +20,7 @@ function AppLayout() {
                     <Routes>
                         <Route path="/dashboard" element={<Dashboard />} />
                         <Route path="/problems" element={<Problems />} />
+                        <Route path="/contests" element={<Contests />} />
 
                         <Route
                             path="/"
