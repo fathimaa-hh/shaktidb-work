@@ -5,6 +5,7 @@ import Navbar from "./components/Navbar";
 import Dashboard from "./pages/Dashboard";
 import Problems from "./pages/Problems";
 import Contests from "./pages/Contests";
+import Activity from "./pages/Activity";
 
 function AppLayout() {
     return (
@@ -21,6 +22,7 @@ function AppLayout() {
                         <Route path="/dashboard" element={<Dashboard />} />
                         <Route path="/problems" element={<Problems />} />
                         <Route path="/contests" element={<Contests />} />
+                        <Route path="/activity" element={<Activity />} />
 
                         <Route
                             path="/"

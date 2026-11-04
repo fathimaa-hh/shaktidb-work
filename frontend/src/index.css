@@ -783,3 +783,127 @@ body {
     cursor: pointer;
     pointer-events: auto;
 }
+/* Daily Activity Management */
+
+.activity-page {
+    padding: 25px;
+}
+
+.activity-stats {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 18px;
+    margin-bottom: 25px;
+}
+
+.activity-stat-card {
+    background: white;
+    padding: 22px;
+    border-radius: 12px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+}
+
+.activity-stat-card h3 {
+    color: #777;
+    font-size: 14px;
+    margin-bottom: 12px;
+}
+
+.activity-stat-card p {
+    font-size: 25px;
+    font-weight: 700;
+}
+
+.activity-form-card {
+    background: white;
+    padding: 25px;
+    border-radius: 12px;
+    margin-bottom: 25px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+}
+
+.activity-form-card h2 {
+    margin-bottom: 20px;
+}
+
+.activity-form {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.activity-toolbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 15px;
+    margin: 25px 0 18px;
+}
+
+.activity-toolbar p {
+    color: #888;
+    margin-top: 5px;
+}
+
+.activity-filter {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.activity-filter input {
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 7px;
+}
+
+.activity-table-container {
+    overflow-x: auto;
+    background: white;
+    border-radius: 12px;
+    padding: 15px;
+}
+
+.activity-table {
+    width: 100%;
+    border-collapse: collapse;
+    text-align: left;
+}
+
+.activity-table th,
+.activity-table td {
+    padding: 15px;
+    border-bottom: 1px solid #eee;
+    white-space: nowrap;
+}
+
+.activity-table th {
+    color: #777;
+    font-size: 13px;
+}
+
+.activity-actions {
+    display: flex;
+    gap: 8px;
+}
+
+@media (max-width: 900px) {
+    .activity-stats {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 600px) {
+    .activity-stats {
+        grid-template-columns: 1fr;
+    }
+
+    .activity-toolbar {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    .activity-filter {
+        flex-wrap: wrap;
+    }
+}
