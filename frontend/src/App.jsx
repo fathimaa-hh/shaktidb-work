@@ -7,6 +7,7 @@ import Problems from "./pages/Problems";
 import Contests from "./pages/Contests";
 import Activity from "./pages/Activity";
 import Analytics from "./pages/Analytics";
+import Achievements from "./pages/Achievements";
 
 function AppLayout() {
     return (
@@ -25,6 +26,7 @@ function AppLayout() {
                         <Route path="/contests" element={<Contests />} />
                         <Route path="/activity" element={<Activity />} />
                         <Route path="/analytics" element={<Analytics />} />
+                        <Route path="/achievements" element={<Achievements />} />
 
                         <Route
                             path="/"
