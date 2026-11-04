@@ -3,6 +3,7 @@ import { Routes, Route, Navigate } from "react-router-dom";
 import Sidebar from "./components/Sidebar";
 import Navbar from "./components/Navbar";
 import Dashboard from "./pages/Dashboard";
+import Problems from "./pages/Problems";
 
 function AppLayout() {
     return (
@@ -17,11 +18,13 @@ function AppLayout() {
                 <div className="page-content">
                     <Routes>
                         <Route path="/dashboard" element={<Dashboard />} />
+                        <Route path="/problems" element={<Problems />} />
 
                         <Route
                             path="/"
                             element={<Navigate to="/dashboard" replace />}
                         />
+                        
 
                     </Routes>
                 </div>

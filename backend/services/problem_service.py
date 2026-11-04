@@ -1,10 +1,10 @@
 from database.connection import get_connection
 from psycopg2.extras import RealDictCursor
 
-
 def add_problem(
     user_id,
     problem_id,
+    status,
     attempts,
     time_taken,
     language,
@@ -35,12 +35,12 @@ def add_problem(
                 notes,
                 solved_date
             )
-            VALUES
-            (%s,%s,'Solved',%s,%s,%s,%s,CURRENT_DATE);
+            VALUES (%s, %s, %s, %s, %s, %s, %s, CURRENT_DATE);
             """,
             (
                 user_id,
                 problem_id,
+                status,
                 attempts,
                 time_taken,
                 language,
@@ -79,6 +79,7 @@ def get_all_problems(user_id):
         cursor.execute(
             """
             SELECT
+                h.status,
                 h.history_id,
                 p.title,
                 pf.platform_name,
@@ -87,7 +88,9 @@ def get_all_problems(user_id):
                 h.attempts,
                 h.time_taken,
                 h.language,
-                h.solved_date
+                h.notes,
+                h.solved_date,
+                h.problem_id
             FROM user_problem_history h
             JOIN problems p
                 ON h.problem_id = p.problem_id

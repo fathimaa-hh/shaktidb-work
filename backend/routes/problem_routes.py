@@ -10,15 +10,18 @@ from utils.response import success_response, error_response
 
 problem_bp = Blueprint("problem", __name__)
 
-
 @problem_bp.route("/problems", methods=["POST"])
 def create_problem():
 
     data = request.get_json()
 
+    if not data:
+        return error_response("No JSON data received.")
+
     required_fields = [
         "user_id",
         "problem_id",
+        "status",
         "attempts",
         "time_taken",
         "language",
@@ -26,28 +29,24 @@ def create_problem():
     ]
 
     for field in required_fields:
-
         if field not in data:
-
             return error_response(f"{field} is required.")
 
-    success, message = add_problem(
+    if data["status"] not in ["Solved", "Attempted"]:
+        return error_response("Invalid problem status.")
 
+    success, message = add_problem(
         data["user_id"],
         data["problem_id"],
+        data["status"],
         data["attempts"],
         data["time_taken"],
         data["language"],
         data["notes"]
-
     )
 
     if success:
-
-        return success_response(
-            message,
-            status_code=201
-        )
+        return success_response(message, status_code=201)
 
     return error_response(message)
 
