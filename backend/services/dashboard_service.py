@@ -8,60 +8,46 @@ def get_dashboard(user_id):
     if connection is None:
         return False, "Database connection failed."
 
-    cursor = connection.cursor(
-        cursor_factory=RealDictCursor
-    )
+    cursor = connection.cursor(cursor_factory=RealDictCursor)
 
     try:
-
         cursor.execute(
             """
             SELECT
-
                 (
                     SELECT COUNT(*)
                     FROM user_problem_history
-                    WHERE user_id=%s
+                    WHERE user_id = %s
+                    AND status = 'Solved'
                 ) AS total_problems,
 
                 (
                     SELECT COUNT(*)
                     FROM contests
-                    WHERE user_id=%s
+                    WHERE user_id = %s
                 ) AS total_contests,
 
                 (
-                    SELECT COUNT(*)
+                    SELECT COUNT(DISTINCT practice_date)
                     FROM daily_activity
-                    WHERE user_id=%s
+                    WHERE user_id = %s
                 ) AS total_practice_days,
 
                 (
-                    SELECT COALESCE(SUM(coding_minutes),0)
+                    SELECT COALESCE(SUM(coding_minutes), 0)
                     FROM daily_activity
-                    WHERE user_id=%s
+                    WHERE user_id = %s
                 ) AS total_coding_minutes;
             """,
-
-            (
-                user_id,
-                user_id,
-                user_id,
-                user_id
-            )
-
+            (user_id, user_id, user_id, user_id)
         )
 
-        dashboard = cursor.fetchone()
-
-        return True, dashboard
+        return True, cursor.fetchone()
 
     except Exception as error:
-
         return False, str(error)
 
     finally:
-
         cursor.close()
         connection.close()
 
@@ -92,7 +78,7 @@ def problems_by_platform(user_id):
         ON pr.platform_id = p.platform_id
 
     WHERE uph.user_id = %s
-
+    AND uph.status = 'Solved'
     GROUP BY p.platform_name
 
     ORDER BY solved DESC;
@@ -137,6 +123,7 @@ def problems_by_difficulty(user_id):
         ON uph.problem_id = pr.problem_id
 
     WHERE uph.user_id = %s
+    AND uph.status = 'Solved'
 
     GROUP BY pr.difficulty
 
@@ -187,6 +174,7 @@ def problems_by_topic(user_id):
                 ON pr.topic_id = t.topic_id
 
             WHERE uph.user_id = %s
+            AND uph.status = 'Solved'
 
             GROUP BY t.topic_name
 
@@ -253,5 +241,74 @@ def monthly_activity(user_id):
 
     finally:
 
+        cursor.close()
+        connection.close()
+
+def contest_performance(user_id):
+    connection = get_connection()
+
+    if connection is None:
+        return False, "Database connection failed."
+
+    cursor = connection.cursor(cursor_factory=RealDictCursor)
+
+    try:
+        cursor.execute(
+            """
+            SELECT
+                c.contest_id,
+                c.contest_name,
+                p.platform_name,
+                c.rank,
+                c.score,
+                c.contest_date
+            FROM contests c
+            JOIN platforms p
+                ON c.platform_id = p.platform_id
+            WHERE c.user_id = %s
+            ORDER BY c.contest_date ASC;
+            """,
+            (user_id,)
+        )
+
+        return True, cursor.fetchall()
+
+    except Exception as error:
+        return False, str(error)
+
+    finally:
+        cursor.close()
+        connection.close()
+
+
+def daily_activity_analytics(user_id):
+    connection = get_connection()
+
+    if connection is None:
+        return False, "Database connection failed."
+
+    cursor = connection.cursor(cursor_factory=RealDictCursor)
+
+    try:
+        cursor.execute(
+            """
+            SELECT
+                practice_date,
+                SUM(coding_minutes) AS coding_minutes,
+                SUM(problems_solved) AS problems_solved
+            FROM daily_activity
+            WHERE user_id = %s
+            GROUP BY practice_date
+            ORDER BY practice_date ASC;
+            """,
+            (user_id,)
+        )
+
+        return True, cursor.fetchall()
+
+    except Exception as error:
+        return False, str(error)
+
+    finally:
         cursor.close()
         connection.close()

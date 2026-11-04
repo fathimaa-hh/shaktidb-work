@@ -5,8 +5,11 @@ from services.dashboard_service import (
     problems_by_platform,
     problems_by_difficulty,
     problems_by_topic,
-    monthly_activity
+    monthly_activity,
+    contest_performance,
+    daily_activity_analytics
 )
+
 
 from utils.response import (
     success_response,
@@ -82,6 +85,33 @@ def dashboard_monthly(user_id):
     if success:
         return success_response(
             "Monthly statistics fetched successfully.",
+            result
+        )
+
+    return error_response(result)
+
+@dashboard_bp.route("/dashboard/contests/<int:user_id>", methods=["GET"])
+def dashboard_contests(user_id):
+
+    success, result = contest_performance(user_id)
+
+    if success:
+        return success_response(
+            "Contest analytics fetched successfully.",
+            result
+        )
+
+    return error_response(result)
+
+
+@dashboard_bp.route("/dashboard/activity/<int:user_id>", methods=["GET"])
+def dashboard_activity(user_id):
+
+    success, result = daily_activity_analytics(user_id)
+
+    if success:
+        return success_response(
+            "Activity analytics fetched successfully.",
             result
         )
 
