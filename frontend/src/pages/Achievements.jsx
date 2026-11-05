@@ -5,6 +5,74 @@ import { useAuth } from "../context/AuthContext";
 
 const badgeIcons = ["🏆", "🥇", "⭐", "🔥", "💎", "🚀", "🎯", "👑"];
 
+// Convert database date into a comparable YYYY-MM-DD string
+const getDateString = (dateValue) => {
+    if (!dateValue) return "";
+
+    // Handle JavaScript Date objects
+    if (dateValue instanceof Date) {
+        if (isNaN(dateValue.getTime())) return "";
+
+        return [
+            dateValue.getFullYear(),
+            String(dateValue.getMonth() + 1).padStart(2, "0"),
+            String(dateValue.getDate()).padStart(2, "0")
+        ].join("-");
+    }
+
+    const value = String(dateValue).trim();
+
+    // Handle ISO date strings: YYYY-MM-DD
+    const isoMatch = value.match(/^(\d{4}-\d{2}-\d{2})/);
+
+    if (isoMatch) {
+        return isoMatch[1];
+    }
+
+    // Handle Flask date strings: Thu, 05 Nov 2026 00:00:00 GMT
+    const parsedDate = new Date(value);
+
+    if (isNaN(parsedDate.getTime())) return "";
+
+    return [
+        parsedDate.getUTCFullYear(),
+        String(parsedDate.getUTCMonth() + 1).padStart(2, "0"),
+        String(parsedDate.getUTCDate()).padStart(2, "0")
+    ].join("-");
+};
+
+// Convert a date into a local year and month
+const getYearMonth = (dateValue) => {
+    const dateString = getDateString(dateValue);
+
+    if (!dateString) return null;
+
+    const match = dateString.match(/^(\d{4})-(\d{2})/);
+
+    if (!match) return null;
+
+    return {
+        year: Number(match[1]),
+        month: Number(match[2])
+    };
+};
+
+const formatAchievementDate = (dateValue) => {
+    const dateString = getDateString(dateValue);
+
+    if (!dateString) return "Date unavailable";
+
+    const [year, month, day] = dateString.split("-").map(Number);
+
+    const date = new Date(Date.UTC(year, month - 1, day));
+
+    return date.toLocaleDateString("en-IN", {
+        day: "2-digit",
+        month: "short",
+        year: "numeric",
+        timeZone: "UTC"
+    });
+};
 function Achievements() {
     const { user } = useAuth();
     const USER_ID = user?.user_id;
@@ -105,16 +173,35 @@ function Achievements() {
         );
     }, [achievements, search]);
 
-    // Achievement Statistics
-    const latestAchievement = achievements.length
-        ? achievements[0].achievement_name
+    // Sort achievements by date, newest first
+    const sortedAchievements = useMemo(() => {
+        return [...achievements].sort((a, b) => {
+            return getDateString(b.achieved_date)
+                .localeCompare(getDateString(a.achieved_date));
+        });
+    }, [achievements]);
+
+    // Get current local year and month
+    const now = new Date();
+
+    const currentYear = now.getFullYear();
+    const currentMonth = now.getMonth() + 1;
+
+    // Count achievements earned in the current month
+    const monthlyAchievements = achievements.filter((item) => {
+        const achieved = getYearMonth(item.achieved_date);
+
+        return (
+            achieved &&
+            achieved.year === currentYear &&
+            achieved.month === currentMonth
+        );
+    }).length;
+
+    // Latest achievement
+    const latestAchievement = sortedAchievements.length
+        ? sortedAchievements[0].achievement_name
         : "None yet";
-
-    const thisMonth = new Date().toISOString().slice(0, 7);
-
-    const monthlyAchievements = achievements.filter((item) =>
-        String(item.achieved_date).slice(0, 7) === thisMonth
-    ).length;
 
     if (loading) {
         return (
@@ -198,7 +285,7 @@ function Achievements() {
 
                 {filteredAchievements.length > 0 ? (
 
-                    filteredAchievements.map((achievement, index) => (
+                    filteredAchievements.map((achievement) => (
 
                         <div
                             className="achievement-card"
@@ -206,7 +293,13 @@ function Achievements() {
                         >
 
                             <div className="achievement-icon">
-                                {badgeIcons[index % badgeIcons.length]}
+                                {badgeIcons[
+                                    sortedAchievements.findIndex(
+                                        (item) =>
+                                            item.achievement_id ===
+                                            achievement.achievement_id
+                                    ) % badgeIcons.length
+                                ]}
                             </div>
 
                             <div className="achievement-content">
@@ -219,8 +312,7 @@ function Achievements() {
                                 </p>
 
                                 <span className="achievement-date">
-                                    Earned:{" "}
-                                    {String(achievement.achieved_date).slice(0, 10)}
+                                    Earned: {formatAchievementDate(achievement.achieved_date)}
                                 </span>
 
                             </div>
