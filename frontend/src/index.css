@@ -1194,3 +1194,31 @@ body {
         min-width: 0;
     }
 }
+.analytics-section-heading {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 20px;
+}
+
+.analytics-section-heading p {
+    margin-top: 5px;
+    color: #777;
+}
+
+.date-range-select {
+    padding: 10px 14px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    background: white;
+    font-size: 14px;
+    cursor: pointer;
+}
+
+@media (max-width: 600px) {
+    .analytics-section-heading {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+}

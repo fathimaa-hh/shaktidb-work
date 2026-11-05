@@ -19,6 +19,7 @@ import {
 function Analytics() {
     const { user } = useAuth();
     const USER_ID = user?.user_id;
+    const [dateRange, setDateRange] = useState("all");
 
     const [dashboard, setDashboard] = useState(null);
     const [platforms, setPlatforms] = useState([]);
@@ -46,7 +47,14 @@ function Analytics() {
                     api.get(`/dashboard/topics/${USER_ID}`),
                     api.get(`/dashboard/monthly/${USER_ID}`),
                     api.get(`/dashboard/contests/${USER_ID}`),
-                    api.get(`/dashboard/activity/${USER_ID}`)
+                    api.get(
+                        `/dashboard/activity/${USER_ID}`,
+                        {
+                            params: dateRange === "all"
+                                ? {}
+                                : { days: Number(dateRange) }
+                        }
+                    )
                 ]);
 
                 setDashboard(responses[0].data.data);
@@ -272,7 +280,23 @@ function Analytics() {
 
             {/* Daily Activity Analytics */}
             <section className="analytics-section">
-                <h2>Practice Consistency</h2>
+
+                <div className="analytics-section-heading">
+                    <div>
+                        <h2>Practice Consistency</h2>
+                        <p>Track your daily coding activity.</p>
+                    </div>
+
+                    <select
+                        value={dateRange}
+                        onChange={(e) => setDateRange(e.target.value)}
+                        className="date-range-select"
+                    >
+                        <option value="7">Last 7 Days</option>
+                        <option value="30">Last 30 Days</option>
+                        <option value="all">All Time</option>
+                    </select>
+                </div>
 
                 <div className="analytics-insights">
 

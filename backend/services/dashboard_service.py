@@ -13,13 +13,53 @@ def get_dashboard(user_id):
     try:
         cursor.execute(
             """
+            WITH problem_status AS (
+
+                SELECT
+                    problem_id,
+                    BOOL_OR(status = 'Solved') AS is_solved,
+                    BOOL_OR(status = 'Attempted') AS is_attempted
+
+                FROM user_problem_history
+
+                WHERE user_id = %s
+
+                GROUP BY problem_id
+            ),
+
+            problem_summary AS (
+
+                SELECT
+                    COUNT(*) FILTER (
+                        WHERE is_solved = TRUE
+                    ) AS total_problems,
+
+                    COUNT(*) FILTER (
+                        WHERE is_attempted = TRUE
+                        AND is_solved = FALSE
+                    ) AS total_attempted,
+
+                    COUNT(*) AS total_tracked_problems
+
+                FROM problem_status
+            )
+
             SELECT
-                (
-                    SELECT COUNT(*)
-                    FROM user_problem_history
-                    WHERE user_id = %s
-                    AND status = 'Solved'
-                ) AS total_problems,
+
+                ps.total_problems,
+
+                ps.total_attempted,
+
+                ps.total_tracked_problems,
+
+                CASE
+                    WHEN ps.total_tracked_problems = 0 THEN 0
+                    ELSE ROUND(
+                        ps.total_problems * 100.0 /
+                        ps.total_tracked_problems,
+                        2
+                    )::DOUBLE PRECISION
+                END AS completion_rate,
 
                 (
                     SELECT COUNT(*)
@@ -37,7 +77,9 @@ def get_dashboard(user_id):
                     SELECT COALESCE(SUM(coding_minutes), 0)
                     FROM daily_activity
                     WHERE user_id = %s
-                ) AS total_coding_minutes;
+                ) AS total_coding_minutes
+
+            FROM problem_summary ps;
             """,
             (user_id, user_id, user_id, user_id)
         )
@@ -281,7 +323,8 @@ def contest_performance(user_id):
         connection.close()
 
 
-def daily_activity_analytics(user_id):
+def daily_activity_analytics(user_id, days=None):
+
     connection = get_connection()
 
     if connection is None:
@@ -290,19 +333,40 @@ def daily_activity_analytics(user_id):
     cursor = connection.cursor(cursor_factory=RealDictCursor)
 
     try:
-        cursor.execute(
-            """
-            SELECT
-                practice_date,
-                SUM(coding_minutes) AS coding_minutes,
-                SUM(problems_solved) AS problems_solved
-            FROM daily_activity
-            WHERE user_id = %s
-            GROUP BY practice_date
-            ORDER BY practice_date ASC;
-            """,
-            (user_id,)
-        )
+
+        if days is None:
+
+            cursor.execute(
+                """
+                SELECT
+                    practice_date,
+                    SUM(coding_minutes) AS coding_minutes,
+                    SUM(problems_solved) AS problems_solved
+                FROM daily_activity
+                WHERE user_id = %s
+                GROUP BY practice_date
+                ORDER BY practice_date ASC;
+                """,
+                (user_id,)
+            )
+
+        else:
+
+            cursor.execute(
+                """
+                SELECT
+                    practice_date,
+                    SUM(coding_minutes) AS coding_minutes,
+                    SUM(problems_solved) AS problems_solved
+                FROM daily_activity
+                WHERE user_id = %s
+                AND practice_date >= CURRENT_DATE - (%s - 1)
+                AND practice_date <= CURRENT_DATE
+                GROUP BY practice_date
+                ORDER BY practice_date ASC;
+                """,
+                (user_id, days)
+            )
 
         return True, cursor.fetchall()
 

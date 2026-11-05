@@ -1,4 +1,5 @@
 from flask import Blueprint, session
+from flask import request, session
 
 from services.dashboard_service import (
     get_dashboard,
@@ -103,12 +104,27 @@ def dashboard_contests(user_id):
 @dashboard_bp.route("/dashboard/activity/<int:user_id>", methods=["GET"])
 @login_required
 def dashboard_activity(user_id):
+
     if user_id != session["user_id"]:
         return error_response("Access denied.", 403)
 
-    success, result = daily_activity_analytics(session["user_id"])
+    # Get optional date range
+    days = request.args.get("days", default=None, type=int)
+
+    # Validate date range
+    if days is not None and days not in (7, 30):
+        return error_response("Invalid date range.", 400)
+
+    # Fetch activity using authenticated user ID
+    success, result = daily_activity_analytics(
+        session["user_id"],
+        days
+    )
 
     if success:
-        return success_response("Activity analytics fetched successfully.", result)
+        return success_response(
+            "Activity analytics fetched successfully.",
+            result
+        )
 
     return error_response(result)
